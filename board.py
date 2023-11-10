@@ -1,43 +1,28 @@
-'''
+"""
 ZHU HAI WEI YAN
 Board
-'''
+"""
 import turtle
 from const import *
 from piece import Piece
 
 
-class Board():
-    '''
-    Class -- Board
-        Represents a board.
+class Board:
+    """
+    A class to represent the checkerboard in a checkerboard game.
+
     Attributes:
-        pen -- A Turtle.
-        board -- All pieces existed on the checkerboard, a nested double list.
-        aten_pieces -- The aten pieces in the current turn, a list.
-        jumpable -- All pieces which can eat the oppponent's piece in the current turn, a string.
-        movable -- All pieces which can move in the current turn, a string.
-    Methods:
-        draw_square -- Draw a square.
-        draw_checkerboard -- Draw a checkerboard.
-        create_board -- Create a nested list storing status of all squares.
-        draw_pieces -- Draw all pieces on the checkerboard.
-        get_piece -- Find the piece through the row and col.
-        move_piece -- Move the piece to the position (row,col).
-        judge_movable -- Judge whether there are some pieces that can move in the current turn.
-        judge_jaumpable -- Judge whether there are some pieces that can eat pieces in the current turn.
-        get_valid_moves -- Get all the positions that the current piece can move to.
-        get_uncaptured_moves -- Get all the uncaptured positions that the current piece can move to.
-        get_captured_moves -- Get all the captured positions that the current piece can move to.
-        delete_piece -- Delete the pieces in the board.
-    '''
+        pen (Turtle): A Turtle object for drawing the board.
+        board (list): A nested list representing the board's state.
+        aten_pieces (list): The pieces that can be captured this turn.
+        jumpable (list): Pieces that can capture an opponent's piece this turn.
+        movable (list): Pieces that can move this turn.
+    """
 
     def __init__(self):
-        '''
-            Constructor -- creates a new instance of PIece
-            Parameters:
-                self -- the board
-        '''
+        """
+        Constructor to create a new board.
+        """
         self.pen = turtle.Turtle()
         self.board = []
         self.aten_pieces = []
@@ -46,51 +31,46 @@ class Board():
         self.create_board()
 
     def draw_square(self, size):
-        '''
-        Function -- draw_square
-            Draw a square.
+        """
+        Draws a square of a given size.
+
         Parameters:
-            size -- The length of each side of the square.
-        Returns:
-            Nothing. Draws a square in the graphics window.
-        '''
+            size (int): The size of each square's side.
+        """
         self.pen.pendown()
         self.pen.begin_fill()
-        for i in range(NUM_EDGE):
+        for _ in range(NUM_EDGE):
             self.pen.forward(size)
             self.pen.left(RIGHT_ANGLE)
         self.pen.end_fill()
         self.pen.penup()
 
     def draw_checkerboard(self):
-        '''
-        Function -- draw_checkerboard
-            Draw a checkerboard.
-        Returns:
-            Nothing. Draws a checkerboard in the graphics window.
-        '''
+        """
+        Draws the checkerboard.
+        """
         pen = self.pen
         pen.penup()
         pen.hideturtle()
-        pen.color("black", "white")
         corner = -NUM_SQUARES / 2 * SQUARE
         pen.setposition(corner, corner)
+        pen.color("black", "white")
+        pen.begin_fill()
         self.draw_square(NUM_SQUARES * SQUARE)
+        pen.end_fill()
         pen.color("black", "gray")
         for col in range(NUM_SQUARES):
             for row in range(NUM_SQUARES):
                 if col % 2 != row % 2:
-                    pen.setposition(corner + SQUARE * col,
-                                    corner + SQUARE * row)
+                    pen.setposition(corner + SQUARE * col, corner + SQUARE * row)
+                    pen.begin_fill()
                     self.draw_square(SQUARE)
+                    pen.end_fill()
 
     def create_board(self):
-        '''
-        Function -- create_board
-            Create a nested list storing status of all squares.
-        Returns:
-            Nothing.
-        '''
+        """
+        Creates the initial state of the board.
+        """
         for row in range(NUM_SQUARES):
             self.board.append([])
             for col in range(NUM_SQUARES):
@@ -109,12 +89,9 @@ class Board():
         ]
 
     def draw_pieces(self):
-        '''
-        Function -- draw_pieces
+        """
             Draw all pieces on the checkerboard.
-        Returns:
-            Nothing.
-        '''
+        """
         for row in range(NUM_SQUARES):
             for col in range(NUM_SQUARES):
                 piece = self.board[row][col]
@@ -122,42 +99,31 @@ class Board():
                     piece.draw_piece()
 
     def get_piece(self, row, col):
-        '''
-        Function -- get_piece
-            Find the piece through the row and col.
-        Parameters:
-            row -- the row
-            col -- the col
-        Returns:
-            Nothing.
-        '''
+        """
+            Get the piece through the row and col.
+        """
         return self.board[row][col]
 
     def move_piece(self, piece, row, col):
-        '''
-        Function -- move_piece
-            Move the piece to the position (row,col).
+        """
+        Moves a piece to a new position and potentially promotes it to a king.
+
         Parameters:
-            row -- the row
-            col -- the col
-        Returns:
-            Nothing.
-        '''
-        self.board[piece.row][piece.col], self.board[row][col] = self.board[
-            row][col], self.board[piece.row][piece.col]
+            piece (Piece): The piece to be moved.
+            row (int): The new row position for the piece.
+            col (int): The new column position for the piece.
+        """
+        # Swap the positions in the board representation
+        self.board[piece.row][piece.col], self.board[row][col] = EMPTY, piece
+        # Update the piece's position and check for king status
         piece.move(row, col)
-        if row == NUM_SQUARES - 1 or row == 0:
+        if (piece.color == BLACK and row == NUM_SQUARES - 1) or (piece.color == RED and row == 0):
             piece.make_king()
 
     def judge_movable(self, turn):
-        '''
-        Function -- judge_movable
+        """
             Judge whether there are some pieces that can move in the current turn.
-        Parameters:
-            turn -- The current turn.
-        Returns:
-            Nothing.
-        '''
+        """
         for row in self.board:
             for piece in row:
                 if piece != EMPTY:
@@ -166,14 +132,9 @@ class Board():
                             self.movable.append(piece)
 
     def judge_jumpable(self, turn):
-        '''
-        Function -- judge_jumpable
+        """
             Judge whether there are some pieces that can eat pieces in the current turn.
-        Parameters:
-            turn -- The current turn.
-        Returns:
-            Nothing.
-        '''
+        """
         for row in self.board:
             for piece in row:
                 if piece != EMPTY:
@@ -182,14 +143,9 @@ class Board():
                             self.jumpable.append(piece)
 
     def get_valid_moves(self, piece):
-        '''
-        Function -- get_valid_moves
+        """
             Get all the positions that the current piece can move to.
-        Parameters:
-            piece -- The current piece.
-        Returns:
-            valid_moves -- Return valid moves of the current piece.
-        '''
+        """
         valid_moves = {}
         if self.jumpable:
             if piece in self.jumpable:
@@ -199,151 +155,84 @@ class Board():
         return valid_moves
 
     def get_uncaptured_moves(self, piece):
-        uncaptured_moves = {}
+        """
+        Function -- get_uncaptured_moves
+            Determines the valid moves for a piece that do not involve capturing an opponent's piece.
+            It considers the direction of the movement based on the piece's color and whether
+            it is a king. Non-king BLACK pieces can only move downwards, non-king RED pieces can
+            only move upwards, and kings can move in any direction.
 
-        def try_move(row, col, color):
+        Parameters:
+            piece -- The current piece for which to determine valid non-capturing moves.
+
+        Returns:
+            uncaptured_moves -- A dictionary mapping potential move coordinates to the value
+                                of the board at that location, typically EMPTY.
+        """
+
+        def add_move(row, col):
             if self.board[row][col] == EMPTY:
                 uncaptured_moves[(row, col)] = self.board[row][col]
 
-        row, col = piece.row, piece.col
-        if piece.color == BLACK or piece.king:
-            if row + 1 < NUM_SQUARES:
-                if col - 1 >= 0:
-                    try_move(row + 1, col - 1, piece.color)
-                if col + 1 < NUM_SQUARES:
-                    try_move(row + 1, col + 1, piece.color)
-        if piece.color == RED or piece.king:
-            if row - 1 >= 0:
-                if col - 1 >= 0:
-                    try_move(row - 1, col - 1, piece.color)
-                if col + 1 < NUM_SQUARES:
-                    try_move(row - 1, col + 1, piece.color)
+        uncaptured_moves = {}
+        directions = [(-1, -1), (-1, 1), (1, -1), (1, 1)]  # 方向向量
+
+        for d_row, d_col in directions:
+            next_row, next_col = piece.row + d_row, piece.col + d_col
+            if 0 <= next_row < NUM_SQUARES and 0 <= next_col < NUM_SQUARES:
+                if (piece.color == BLACK and d_row > 0) or \
+                        (piece.color == RED and d_row < 0) or piece.king:
+                    add_move(next_row, next_col)
         return uncaptured_moves
 
     def get_captured_moves(self, piece):
+        """
+        Function -- get_captured_moves
+            Identifies all the possible moves where the current piece can capture an opponent's piece.
+            It checks for opponent pieces adjacent to the current piece and if the space beyond them
+            is empty, allowing for a capturing move. It handles moves differently based on the piece's
+            color and king status, with the same directional movement restrictions as in
+            `get_uncaptured_moves`.
+
+        Parameters:
+            piece -- The current piece for which to determine valid capturing moves.
+
+        Returns:
+            capture_moves -- A dictionary containing all possible capturing moves for the piece,
+                             where keys are the coordinates after the capture and values are EMPTY,
+                             representing the space to which the piece would move.
+        """
+
+        def add_capture_move(row, col, enemy_row, enemy_col):
+            if self.board[row][col] == EMPTY and \
+                    isinstance(self.board[enemy_row][enemy_col], Piece) and \
+                    self.board[enemy_row][enemy_col].color != piece.color:
+                capture_moves[(row, col)] = self.board[row][col]
+                self.aten_pieces.append(self.board[enemy_row][enemy_col])
+
         capture_moves = {}
+        directions = [(-1, -1), (-1, 1), (1, -1), (1, 1)]  # 方向向量
 
-        def try_capture(row, col, next_row, next_col, color):
-            if self.board[row][col] != EMPTY and self.board[row][col].color != color:
-                if self.board[next_row][next_col] == EMPTY:
-                    capture_moves[(next_row, next_col)] = self.board[next_row][next_col]
-                    self.aten_pieces = [self.board[row][col]]
+        for d_row, d_col in directions:
+            enemy_row, enemy_col = piece.row + d_row, piece.col + d_col
+            capture_row, capture_col = enemy_row + d_row, enemy_col + d_col
+            if 0 <= enemy_row < NUM_SQUARES and 0 <= enemy_col < NUM_SQUARES and \
+                    0 <= capture_row < NUM_SQUARES and 0 <= capture_col < NUM_SQUARES:
+                if self.board[enemy_row][enemy_col] != EMPTY and \
+                        (piece.color == BLACK and d_row > 0) or \
+                        (piece.color == RED and d_row < 0) or piece.king:
+                    add_capture_move(capture_row, capture_col, enemy_row, enemy_col)
 
-        row, col = piece.row, piece.col
-        if piece.color == BLACK or piece.king:
-            if row + 1 < NUM_SQUARES and row + 2 < NUM_SQUARES:
-                if col - 1 >= 0 and col - 2 >= 0:
-                    try_capture(row + 1, col - 1, row + 2, col - 2, piece.color)
-                if col + 1 < NUM_SQUARES and col + 2 < NUM_SQUARES:
-                    try_capture(row + 1, col + 1, row + 2, col + 2, piece.color)
-        if piece.color == RED or piece.king:
-            if row - 1 >= 0 and row - 2 >= 0:
-                if col - 1 >= 0 and col - 2 >= 0:
-                    try_capture(row - 1, col - 1, row - 2, col - 2, piece.color)
-                if col + 1 < NUM_SQUARES and col + 2 < NUM_SQUARES:
-                    try_capture(row - 1, col + 1, row - 2, col + 2, piece.color)
         return capture_moves
 
-    # def get_uncaptured_moves(self, piece):
-    #     '''
-    #     Function -- get_uncaptured_moves
-    #         Get all the uncaptured positions that the current piece can move to.
-    #     Parameters:
-    #         piece -- The current piece.
-    #     Returns:
-    #         uncaptured_moves -- Return uncaptured moves of the current piece.
-    #     '''
-    #     uncaptured_moves = {}
-    #     row = piece.row
-    #     col = piece.col
-    #     if piece.color == BLACK or piece.king:
-    #         if row + 1 < NUM_SQUARES and col - 1 >= 0:
-    #             if self.board[row + 1][col - 1] == EMPTY:
-    #                 uncaptured_moves[(row + 1,
-    #                                   col - 1)] = self.board[row + 1][col - 1]
-    #         if row + 1 < NUM_SQUARES and col + 1 < NUM_SQUARES:
-    #             if self.board[row + 1][col + 1] == EMPTY:
-    #                 uncaptured_moves[(row + 1,
-    #                                   col + 1)] = self.board[row + 1][col + 1]
-    #     if piece.color == RED or piece.king:
-    #         if row - 1 >= 0 and col - 1 >= 0:
-    #             if self.board[row - 1][col - 1] == EMPTY:
-    #                 uncaptured_moves[(row - 1,
-    #                                   col - 1)] = self.board[row - 1][col - 1]
-    #         if row - 1 >= 0 and col + 1 < NUM_SQUARES:
-    #             if self.board[row - 1][col + 1] == EMPTY:
-    #                 uncaptured_moves[(row - 1,
-    #                                   col + 1)] = self.board[row - 1][col + 1]
-    #     return uncaptured_moves
-    #
-    # def get_captured_moves(self, piece):
-    #     '''
-    #     Function -- get_captured_moves
-    #         Get all the captured positions that the current piece can move to.
-    #     Parameters:
-    #         piece -- The current piece.
-    #     Returns:
-    #         uncaptured_moves -- Return captured moves of the current piece.
-    #     '''
-    #     capture_moves = {}
-    #     row = piece.row
-    #     col = piece.col
-    #     if piece.color == BLACK or piece.king:
-    #         if row + 1 < NUM_SQUARES and col - 1 >= 0:
-    #             if self.board[row + 1][col - 1] != EMPTY:
-    #                 if self.board[row + 1][col - 1].color != piece.color:
-    #                     if row + 2 < NUM_SQUARES and col - 2 >= 0:
-    #                         if self.board[row + 2][col - 2] == EMPTY:
-    #                             capture_moves[(row + 2, col -
-    #                                            2)] = self.board[row + 2][col -
-    #                                                                      2]
-    #                             self.aten_pieces = [
-    #                                 self.board[row + 1][col - 1]
-    #                             ]
-    #         if row + 1 < NUM_SQUARES and col + 1 < NUM_SQUARES:
-    #             if self.board[row + 1][col + 1] != EMPTY:
-    #                 if self.board[row + 1][col + 1].color != piece.color:
-    #                     if row + 2 < NUM_SQUARES and col + 2 < NUM_SQUARES:
-    #                         if self.board[row + 2][col + 2] == EMPTY:
-    #                             capture_moves[(row + 2, col +
-    #                                            2)] = self.board[row + 2][col +
-    #                                                                      2]
-    #                             self.aten_pieces = [
-    #                                 self.board[row + 1][col + 1]
-    #                             ]
-    #     if piece.color == RED or piece.king:
-    #         if row - 1 >= 0 and col - 1 >= 0:
-    #             if self.board[row - 1][col - 1] != EMPTY:
-    #                 if self.board[row - 1][col - 1].color != piece.color:
-    #                     if row - 2 >= 0 and col - 2 >= 0:
-    #                         if self.board[row - 2][col - 2] == EMPTY:
-    #                             capture_moves[(row - 2, col -
-    #                                            2)] = self.board[row - 2][col -
-    #                                                                      2]
-    #                             self.aten_pieces = [
-    #                                 self.board[row - 1][col - 1]
-    #                             ]
-    #         if row - 1 >= 0 and col + 1 < NUM_SQUARES:
-    #             if self.board[row - 1][col + 1] != EMPTY:
-    #                 if self.board[row - 1][col + 1].color != piece.color:
-    #                     if row - 2 >= 0 and col + 2 < NUM_SQUARES:
-    #                         if self.board[row - 2][col + 2] == EMPTY:
-    #                             capture_moves[(row - 2, col +
-    #                                            2)] = self.board[row - 2][col +
-    #                                                                      2]
-    #                             self.aten_pieces = [
-    #                                 self.board[row - 1][col + 1]
-    #                             ]
-    #     return capture_moves
-
     def delete_piece(self, pieces):
-        '''
+        """
         Function -- delete_piece
             Delete the pieces in the board.
         Parameters:
             pieces -- The deleted pieces.
         Returns:
             Nothing.
-        '''
+        """
         for piece in pieces:
             self.board[piece.row][piece.col] = EMPTY

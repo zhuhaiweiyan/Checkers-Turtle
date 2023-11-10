@@ -1,6 +1,6 @@
 """
 ZHU HAI WEI YAN
-Main program
+Main function
 """
 
 import turtle
@@ -8,53 +8,48 @@ from const import *
 from gamestate import GameState
 
 
-def click_handler(x, y):
+def click_handler(x, y, game):
     """
-        Function -- click_handler
-            Called when a click occurs.
-        Parameters:
-            x -- X coordinate of the click. Automatically provided by Turtle.
-            y -- Y coordinate of the click. Automatically provided by Turtle.
-        Returns:
-            Does not and should not return. Click handlers are a special type
-            of function automatically called by Turtle. You will not have
-            access to anything returned by this function.
+    Called when a click occurs within the game window.
+
+    Parameters:
+        x (float): X coordinate of the click.
+        y (float): Y coordinate of the click.
+        game (GameState): The current game state object.
     """
     row = int(y // SQUARE + NUM_SQUARES / 2)
     col = int(x // SQUARE + NUM_SQUARES / 2)
-    if -NUM_SQUARES / 2 * SQUARE <= x <= NUM_SQUARES / 2 * SQUARE and -NUM_SQUARES / 2 * SQUARE <= y <= NUM_SQUARES / 2 * SQUARE:
-        print("Clicked at (", row, ",", col, ")")
+    if -NUM_SQUARES / 2 * SQUARE <= x <= NUM_SQUARES / 2 * SQUARE and \
+       -NUM_SQUARES / 2 * SQUARE <= y <= NUM_SQUARES / 2 * SQUARE:
+        print(f"Clicked at ({row}, {col})")
         game.human_click_piece(row, col)
     else:
         print("The click was not in bounds.")
 
 
 def main():
+    """
+    Main function to set up and start the checkerboard game.
+    """
+    # Set up the game window
     board_size = NUM_SQUARES * SQUARE
     window_size = board_size + SQUARE
     turtle.setup(window_size, window_size)
     turtle.screensize(board_size, board_size)
     turtle.bgcolor("white")
-    turtle.tracer(0, 0)
-    # makes the drawing appear immediately
-    #
-    #
-    #
+    turtle.tracer(0, 0)  # Immediate drawing without animation
 
-    global game
+    # Initialize the game state
     game = GameState()
     game.board.draw_checkerboard()
     game.board.draw_pieces()
 
-    #
-    #
-    #
-    # Click handling
+    # Set up click handling
     screen = turtle.Screen()
-    GameState.screen(game, screen)
-    # This will call the click_handler function when a click occurs
-    screen.onclick(click_handler)
-    # Stops the window from closing.
+    game.screen(screen)
+    screen.onclick(lambda x, y: click_handler(x, y, game))
+
+    # Start the game loop
     turtle.done()
 
 

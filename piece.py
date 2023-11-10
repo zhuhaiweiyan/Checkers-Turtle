@@ -1,33 +1,27 @@
-'''
-ZHU HAI WEI YAN
-Piece
-'''
 import turtle
 from const import *
 
-
 class Piece:
-    '''
-    Class -- Piece
-        Represents pieces.
+    """
+    A class to represent a piece in a checkerboard game.
+
     Attributes:
-        pen -- A Turtle.
-        row -- The row of a piece, an integer.
-        col -- The col of a piece, an integer.
-        color -- The color of a piece, a string.
-        king -- A boolean which represents whether a piece is a king piece.
-    Methods:
-        draw_piece -- Helper method. Creates a standard card deck.
-        make_king -- Make a piece become a king piece.
-        move -- Change the row and col of a piece.
-    '''
+        pen (Turtle): A Turtle object for drawing the piece.
+        row (int): The row of the piece on the board.
+        col (int): The column of the piece on the board.
+        color (str): The color of the piece.
+        king (bool): Indicates if the piece is a king.
+    """
 
     def __init__(self, row, col, color):
-        '''
-            Constructor -- creates a new instance of PIece
-            Parameters:
-                self -- the current DeckOfCards object
-        '''
+        """
+        Constructor to create a new piece.
+
+        Parameters:
+            row (int): The row of the piece.
+            col (int): The column of the piece.
+            color (str): The color of the piece.
+        """
         self.pen = turtle.Turtle()
         self.row = row
         self.col = col
@@ -35,14 +29,11 @@ class Piece:
         self.king = False
 
     def draw_piece(self):
-        '''
-            Function -- draw_piece
-                Draw a piece in the given position.
-            Returns:
-                Nothing. Draws a piece in the graphics windo.
-        '''
+        """
+        Draws the piece on the board.
+        """
         pen = self.pen
-        pen.setposition((-NUM_SQUARES / 2 + self.col + 1 / 2) * SQUARE,
+        pen.setposition((-NUM_SQUARES / 2 + self.col + 0.5) * SQUARE,
                         (-NUM_SQUARES / 2 + self.row + RATIO) * SQUARE)
         pen.color(self.color)
         pen.pendown()
@@ -50,11 +41,13 @@ class Piece:
         pen.circle(RADIUS)
         pen.fillcolor(self.color)
         pen.end_fill()
-        # If the piece is a king piece, it has some difference.
         self.draw_king_status()
         pen.penup()
 
     def draw_king_status(self):
+        """
+        Draws an additional circle if the piece is a king.
+        """
         if self.king:
             self.pen.begin_fill()
             self.pen.circle(RADIUS / 2)
@@ -62,20 +55,18 @@ class Piece:
             self.pen.end_fill()
 
     def make_king(self):
-        '''
-            Function -- make_king
-                Make a piece become a king piece.
-            Returns:
-                Nothing.
-        '''
+        """
+        Turns the piece into a king piece.
+        """
         self.king = True
 
     def move(self, row, col):
-        '''
-            Function -- move
-                Change the row and col of a piece.
-            Returns:
-                Nothing.
-        '''
+        """
+        Moves the piece to a new position.
+
+        Parameters:
+            row (int): The new row for the piece.
+            col (int): The new column for the piece.
+        """
         self.row = row
         self.col = col

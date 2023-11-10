@@ -9,31 +9,22 @@ from const import *
 
 
 class GameState:
-    '''
-    Class -- Board
-        Represents a board.
+    """
+    A class to represent the state of a checkerboard game.
+
     Attributes:
-        pen -- A Turtle.
-        clicked_piece -- The clicked piece.
-        current_piece -- The current piece.
-        board -- Create a Board object.
-        turn -- The current turn.
-        valid_moves -- Valid move sof the current piece.
-    Methods:
-        update -- Update the checkerboard.
-        click_piece -- Determine the correctness of the clicked piece and execute the corresponding actions.
-        draw_valid_moves -- Draw the current valid moves.
-        exchange_turn -- Exchange the turn.
-        winner -- Judge whether the game has a winner or not.
-        screen -- Add the screen.
-    '''
+        pen (Turtle): A Turtle object for drawing.
+        clicked_piece (Piece): The piece that was clicked.
+        current_piece (Piece): The currently active piece.
+        board (Board): The game board.
+        turn (str): The current turn, either BLACK or RED.
+        valid_moves (dict): A dictionary of valid moves for the current piece.
+    """
 
     def __init__(self):
-        '''
-        Constructor -- creates a new instance of PIece
-        Parameters:
-            self -- the game
-        '''
+        """
+        Constructor to create a new game state.
+        """
         self.pen = turtle.Turtle()
         self.clicked_piece = None
         self.current_piece = None
@@ -42,12 +33,9 @@ class GameState:
         self.valid_moves = {}
 
     def update(self):
-        '''
-        Function -- update
-            Update the checkerboard.
-        Returns:
-            Nothing.
-        '''
+        """
+        Updates the state of the checkerboard and draws the valid moves.
+        """
         self.board.draw_checkerboard()
         self.board.draw_pieces()
         self.draw_valid_moves(self.valid_moves)
@@ -62,15 +50,13 @@ class GameState:
         self.screen = screen
 
     def human_click_piece(self, row, col):
-        '''
-        Function -- click_piece
-            Determine the correctness of the clicked piece and execute the corresponding actions.
+        """
+        Handles human player's piece selection and movement.
+
         Parameters:
-            row -- the row of the piece.
-            col -- the col of the piece.
-        Returns:
-            Nothing.
-        '''
+            row (int): The row of the clicked position.
+            col (int): The column of the clicked position.
+        """
         if 0 <= row < NUM_SQUARES and 0 <= col < NUM_SQUARES:
             self.clicked_piece = self.board.get_piece(row, col)
         if self.clicked_piece:
@@ -116,10 +102,7 @@ class GameState:
 
     def computer(self):
         '''
-        Function -- computer
             Computer move automatically .
-        Returns:
-            Nothing.
         '''
         if self.board.jumpable:
             jump = random.choice(self.board.jumpable)
