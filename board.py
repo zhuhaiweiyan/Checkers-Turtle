@@ -2,9 +2,10 @@
 ZHU HAI WEI YAN
 Board
 """
-import turtle
+
 from const import *
 from piece import Piece
+from visualizer import Visualizer
 
 
 class Board:
@@ -12,60 +13,25 @@ class Board:
     A class to represent the checkerboard in a checkerboard game.
 
     Attributes:
-        pen (Turtle): A Turtle object for drawing the board.
         board (list): A nested list representing the board's state.
         aten_pieces (list): The pieces that can be captured this turn.
         jumpable (list): Pieces that can capture an opponent's piece this turn.
         movable (list): Pieces that can move this turn.
+        visualizer (Visualizer): An instance of the Visualizer class for drawing.
     """
 
     def __init__(self):
         """
         Constructor to create a new board.
         """
-        self.pen = turtle.Turtle()
         self.board = []
         self.aten_pieces = []
         self.jumpable = []
         self.movable = []
+        self.visualizer = Visualizer()  # Create a Visualizer instance for drawing
         self.create_board()
-
-    def draw_square(self, size):
-        """
-        Draws a square of a given size.
-
-        Parameters:
-            size (int): The size of each square's side.
-        """
-        self.pen.pendown()
-        self.pen.begin_fill()
-        for _ in range(NUM_EDGE):
-            self.pen.forward(size)
-            self.pen.left(RIGHT_ANGLE)
-        self.pen.end_fill()
-        self.pen.penup()
-
-    def draw_checkerboard(self):
-        """
-        Draws the checkerboard.
-        """
-        pen = self.pen
-        pen.penup()
-        pen.hideturtle()
-        corner = -NUM_SQUARES / 2 * SQUARE
-        pen.setposition(corner, corner)
-        pen.color("black", "white")
-        pen.begin_fill()
-        self.draw_square(NUM_SQUARES * SQUARE)
-        pen.end_fill()
-        pen.color("black", "gray")
-        for col in range(NUM_SQUARES):
-            for row in range(NUM_SQUARES):
-                if col % 2 != row % 2:
-                    pen.setposition(corner + SQUARE * col, corner + SQUARE * row)
-                    pen.begin_fill()
-                    self.draw_square(SQUARE)
-                    pen.end_fill()
+        self.visualizer.draw_checkerboard(NUM_SQUARES, SQUARE)  # Draw the checkerboard once
+        self.draw_pieces()  # Draw all pieces on the checkerboard
 
     def create_board(self):
         """
@@ -90,13 +56,12 @@ class Board:
 
     def draw_pieces(self):
         """
-            Draw all pieces on the checkerboard.
+        Draw all pieces on the checkerboard using the visualizer.
         """
-        for row in range(NUM_SQUARES):
-            for col in range(NUM_SQUARES):
-                piece = self.board[row][col]
+        for row in self.board:
+            for piece in row:
                 if piece != EMPTY:
-                    piece.draw_piece()
+                    self.visualizer.draw_piece(piece, NUM_SQUARES, SQUARE, RADIUS)
 
     def get_piece(self, row, col):
         """
@@ -104,53 +69,65 @@ class Board:
         """
         return self.board[row][col]
 
-    def move_piece(self, piece, row, col):
+    def move_piece(self, piece, new_row, new_col):
         """
         Moves a piece to a new position and potentially promotes it to a king.
-
-        Parameters:
-            piece (Piece): The piece to be moved.
-            row (int): The new row position for the piece.
-            col (int): The new column position for the piece.
         """
-        # Swap the positions in the board representation
-        self.board[piece.row][piece.col], self.board[row][col] = EMPTY, piece
-        # Update the piece's position and check for king status
-        piece.move(row, col)
-        if (piece.color == BLACK and row == NUM_SQUARES - 1) or (piece.color == RED and row == 0):
+        # 重置aten_pieces
+        self.aten_pieces = []
+
+        # 检查是否为吃子移动
+        captured_moves = self.get_captured_moves(piece)
+        if (new_row, new_col) in captured_moves:
+            # 如果是吃子，添加到aten_pieces
+            enemy_position = captured_moves[(new_row, new_col)]
+            self.aten_pieces.append(self.board[enemy_position[0]][enemy_position[1]])
+        
+        # 执行移动
+        self.board[piece.row][piece.col] = EMPTY
+        self.board[new_row][new_col] = piece
+        piece.move(new_row, new_col)
+        
+        # 如果移动后棋子变为王棋，更新棋子状态
+        if (piece.color == BLACK and new_row == NUM_SQUARES - 1) or \
+           (piece.color == RED and new_row == 0):
             piece.make_king()
-
-    def judge_movable(self, turn):
-        """
-            Judge whether there are some pieces that can move in the current turn.
-        """
-        for row in self.board:
-            for piece in row:
-                if piece != EMPTY:
-                    if piece.color == turn:
-                        if self.get_uncaptured_moves(piece):
-                            self.movable.append(piece)
+        
+        # 如果有吃子，删除被吃的棋子
+        if self.aten_pieces:
+            self.delete_piece(self.aten_pieces)
 
     def judge_jumpable(self, turn):
         """
-            Judge whether there are some pieces that can eat pieces in the current turn.
+        Judge whether there are some pieces that can capture an opponent's piece this turn.
         """
+        self.jumpable.clear()
         for row in self.board:
             for piece in row:
-                if piece != EMPTY:
-                    if piece.color == turn:
-                        if self.get_captured_moves(piece):
-                            self.jumpable.append(piece)
+                if piece != EMPTY and piece.color == turn:
+                    if self.get_captured_moves(piece):
+                        self.jumpable.append(piece)
+
+    def judge_movable(self, turn):
+        """
+        Judge whether there are some pieces that can move in the current turn.
+        """
+        if not self.jumpable:  # Only fill movable if no pieces can jump
+            self.movable.clear()
+            for row in self.board:
+                for piece in row:
+                    if piece != EMPTY and piece.color == turn:
+                        if self.get_uncaptured_moves(piece):
+                            self.movable.append(piece)
 
     def get_valid_moves(self, piece):
         """
-            Get all the positions that the current piece can move to.
+        Get all the positions that the current piece can move to.
         """
         valid_moves = {}
-        if self.jumpable:
-            if piece in self.jumpable:
-                valid_moves.update(self.get_captured_moves(piece))
-        else:
+        if piece in self.jumpable:
+            valid_moves.update(self.get_captured_moves(piece))
+        elif not self.jumpable:
             valid_moves.update(self.get_uncaptured_moves(piece))
         return valid_moves
 
@@ -170,10 +147,6 @@ class Board:
                                 of the board at that location, typically EMPTY.
         """
 
-        def add_move(row, col):
-            if self.board[row][col] == EMPTY:
-                uncaptured_moves[(row, col)] = self.board[row][col]
-
         uncaptured_moves = {}
         directions = [(-1, -1), (-1, 1), (1, -1), (1, 1)]  # 方向向量
 
@@ -182,7 +155,8 @@ class Board:
             if 0 <= next_row < NUM_SQUARES and 0 <= next_col < NUM_SQUARES:
                 if (piece.color == BLACK and d_row > 0) or \
                         (piece.color == RED and d_row < 0) or piece.king:
-                    add_move(next_row, next_col)
+                    if self.board[next_row][next_col] == EMPTY:
+                        uncaptured_moves[(next_row, next_col)] = self.board[next_row][next_col]
         return uncaptured_moves
 
     def get_captured_moves(self, piece):
@@ -202,17 +176,8 @@ class Board:
                              where keys are the coordinates after the capture and values are EMPTY,
                              representing the space to which the piece would move.
         """
-
-        def add_capture_move(row, col, enemy_row, enemy_col):
-            if self.board[row][col] == EMPTY and \
-                    isinstance(self.board[enemy_row][enemy_col], Piece) and \
-                    self.board[enemy_row][enemy_col].color != piece.color:
-                capture_moves[(row, col)] = self.board[row][col]
-                self.aten_pieces.append(self.board[enemy_row][enemy_col])
-
         capture_moves = {}
         directions = [(-1, -1), (-1, 1), (1, -1), (1, 1)]  # 方向向量
-
         for d_row, d_col in directions:
             enemy_row, enemy_col = piece.row + d_row, piece.col + d_col
             capture_row, capture_col = enemy_row + d_row, enemy_col + d_col
@@ -221,8 +186,11 @@ class Board:
                 if self.board[enemy_row][enemy_col] != EMPTY and \
                         (piece.color == BLACK and d_row > 0) or \
                         (piece.color == RED and d_row < 0) or piece.king:
-                    add_capture_move(capture_row, capture_col, enemy_row, enemy_col)
-
+                    if isinstance(self.board[enemy_row][enemy_col], Piece) and \
+                            self.board[enemy_row][enemy_col].color != piece.color and \
+                            self.board[capture_row][capture_col] == EMPTY:
+                        # 只记录可能的吃子移动，不添加到aten_pieces
+                        capture_moves[(capture_row, capture_col)] = (enemy_row, enemy_col)
         return capture_moves
 
     def delete_piece(self, pieces):

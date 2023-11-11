@@ -41,8 +41,6 @@ def main():
 
     # Initialize the game state
     game = GameState()
-    game.board.draw_checkerboard()
-    game.board.draw_pieces()
 
     # Set up click handling
     screen = turtle.Screen()
