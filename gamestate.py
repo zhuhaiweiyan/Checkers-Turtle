@@ -1,7 +1,7 @@
-'''
+"""
 ZHU HAI WEI YAN
 GameState
-'''
+"""
 
 import random
 from board import Board
@@ -14,7 +14,6 @@ class GameState:
     A class to represent the state of a checkerboard game.
 
     Attributes:
-        pen (Turtle): A Turtle object for drawing.
         clicked_piece (Piece): The piece that was clicked.
         current_piece (Piece): The currently active piece.
         board (Board): The game board.
@@ -26,6 +25,7 @@ class GameState:
         """
         Constructor to create a new game state.
         """
+        self.screen = None
         self.clicked_piece = None
         self.current_piece = None
         self.board = Board()
@@ -46,7 +46,7 @@ class GameState:
         self.screen = screen
 
     def reset_game_state(self):
-        ''' Reset the game state for the next turn '''
+        """ Reset the game state for the next turn """
         self.current_piece = None
         self.board.aten_pieces = []
         self.board.jumpable = []
@@ -54,7 +54,7 @@ class GameState:
         self.valid_moves.clear()
 
     def complete_turn(self):
-        ''' Complete the turn and update the game state '''
+        """ Complete the turn and update the game state """
         self.reset_game_state()
         self.exchange_turn()
         self.board.judge_movable(self.turn)
@@ -117,9 +117,9 @@ class GameState:
                     self.complete_turn()
 
     def computer(self):
-        '''
+        """
             Computer move automatically .
-        '''
+        """
         if self.game_over:
             return
         if self.board.jumpable:

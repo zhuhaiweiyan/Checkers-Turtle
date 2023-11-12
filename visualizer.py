@@ -1,6 +1,12 @@
+"""
+ZHU HAI WEI YAN
+Visualizer
+"""
+
 import turtle
 from const import *
 from piece import Piece
+
 
 class Visualizer:
     """
@@ -17,7 +23,7 @@ class Visualizer:
         turtle.setup(WINDOW_SIZE, WINDOW_SIZE)
         turtle.screensize(BOARD_SIZE, BOARD_SIZE)
         turtle.bgcolor(BACKGROUND_COLOR)
-        
+
     def draw_square(self, size):
         """
         Draws a square of a given size.
