@@ -10,7 +10,14 @@ class Visualizer:
     def __init__(self):
         self.pen = turtle.Turtle()
         self.pen.penup()
+        self.pen.hideturtle()
+        turtle.tracer(0, 0)  # Turn off animation for faster drawing
 
+    def initialize_game_window(self):
+        turtle.setup(WINDOW_SIZE, WINDOW_SIZE)
+        turtle.screensize(BOARD_SIZE, BOARD_SIZE)
+        turtle.bgcolor(BACKGROUND_COLOR)
+        
     def draw_square(self, size):
         """
         Draws a square of a given size.
@@ -37,11 +44,11 @@ class Visualizer:
         self.pen.hideturtle()
         corner = -num_squares / 2 * square_size
         self.pen.setposition(corner, corner)
-        self.pen.color("black", "white")
+        self.pen.color(PEN_COLOR, SQUARE_COLORS[1])
         self.pen.begin_fill()
         self.draw_square(num_squares * square_size)
         self.pen.end_fill()
-        self.pen.color("black", "gray")
+        self.pen.color(PEN_COLOR, SQUARE_COLORS[0])
         for col in range(num_squares):
             for row in range(num_squares):
                 if col % 2 != row % 2:
@@ -85,7 +92,7 @@ class Visualizer:
         if piece.king:
             self.pen.begin_fill()
             self.pen.circle(radius / 2)
-            self.pen.fillcolor(ORANGE)
+            self.pen.fillcolor(KING_COLOR)
             self.pen.end_fill()
 
     def draw_valid_moves(self, moves):
@@ -98,9 +105,9 @@ class Visualizer:
             row, col = move
             self.pen.setposition((-NUM_SQUARES / 2 + col) * SQUARE,
                                  (-NUM_SQUARES / 2 + row) * SQUARE)
-            self.pen.color("red")
+            self.pen.color(RED)
             self.pen.pendown()
-            for i in range(NUM_EDGE):
+            for _ in range(NUM_EDGE):
                 self.pen.forward(SQUARE)
                 self.pen.left(RIGHT_ANGLE)
             self.pen.penup()
@@ -115,9 +122,9 @@ class Visualizer:
             row, col = piece.row, piece.col
             self.pen.setposition((-NUM_SQUARES / 2 + col) * SQUARE,
                                  (-NUM_SQUARES / 2 + row) * SQUARE)
-            self.pen.color("lime")
+            self.pen.color(HIGHLIGHT_COLOR)
             self.pen.pendown()
-            for i in range(NUM_EDGE):
+            for _ in range(NUM_EDGE):
                 self.pen.forward(SQUARE)
                 self.pen.left(RIGHT_ANGLE)
             self.pen.penup()
@@ -128,9 +135,9 @@ class Visualizer:
         Parameters:
             winner (str): The winner of the game.
         """
-        message = "YOU WIN!" if winner == BLACK else "YOU LOSE!"
-        self.pen.pencolor("deep sky blue")
+        message = WINNER_MESSAGES[0] if winner == BLACK else WINNER_MESSAGES[1]
+        self.pen.pencolor(FONT_COLOR)
         self.pen.setposition(0, 0)
         self.pen.pendown()
-        self.pen.write(message, False, 'center', ("Arial", 30, "bold"))
+        self.pen.write(message, False, MESSAGE_POSITION, (FONT, FONT_SIZE, FONT_STYLE))
         self.pen.penup()

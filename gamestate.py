@@ -32,6 +32,7 @@ class GameState:
         self.turn = BLACK
         self.valid_moves = {}
         self.visualizer = Visualizer()
+        self.game_over = False
 
     def update(self):
         """
@@ -39,7 +40,7 @@ class GameState:
         """
         self.visualizer.draw_checkerboard(NUM_SQUARES, SQUARE)
         self.board.draw_pieces()
-        self.draw_valid_moves(self.valid_moves)
+        self.visualize_moves(self.valid_moves)
 
     def screen(self, screen):
         self.screen = screen
@@ -69,6 +70,20 @@ class GameState:
             self.exchange_turn()
             print(f"{self.turn} WIN!")
             self.visualizer.display_winner(self.turn)
+            self.game_over = True
+
+    def handle_click(self, x, y):
+        """
+        Handles the click event within the game window.
+        """
+        row = int(y // SQUARE + NUM_SQUARES / 2)
+        col = int(x // SQUARE + NUM_SQUARES / 2)
+        if -NUM_SQUARES / 2 * SQUARE <= x <= NUM_SQUARES / 2 * SQUARE and \
+           -NUM_SQUARES / 2 * SQUARE <= y <= NUM_SQUARES / 2 * SQUARE:
+            print(f"Clicked at ({row}, {col})")
+            self.human_click_piece(row, col)
+        else:
+            print("The click was not in bounds.")
 
     def human_click_piece(self, row, col):
         """
@@ -78,6 +93,8 @@ class GameState:
             row (int): The row of the clicked position.
             col (int): The column of the clicked position.
         """
+        if self.game_over:
+            return
         if 0 <= row < NUM_SQUARES and 0 <= col < NUM_SQUARES:
             self.clicked_piece = self.board.get_piece(row, col)
         if self.clicked_piece:
@@ -90,7 +107,6 @@ class GameState:
         else:
             if self.current_piece and (row, col) in self.valid_moves:
                 self.board.move_piece(self.current_piece, row, col)
-                # self.board.delete_piece(self.board.aten_pieces)
                 if self.board.jumpable and self.board.get_captured_moves(
                         self.board.board[row][col]):
                     self.current_piece = self.board.board[row][col]
@@ -104,13 +120,14 @@ class GameState:
         '''
             Computer move automatically .
         '''
+        if self.game_over:
+            return
         if self.board.jumpable:
             jump = random.choice(self.board.jumpable)
             valid_moves = self.board.get_valid_moves(jump)
             while valid_moves:
                 aim = random.choice(list(valid_moves.keys()))
                 self.board.move_piece(jump, aim[0], aim[1])
-                # self.board.delete_piece(self.board.aten_pieces)
                 piece = self.board.board[aim[0]][aim[1]]
                 valid_moves = self.board.get_captured_moves(piece)
         else:
@@ -121,21 +138,27 @@ class GameState:
                     aim = random.choice(list(valid_moves.keys()))
                     self.board.move_piece(move, aim[0], aim[1])
                     self.board.judge_movable(self.turn)
-
         self.complete_turn()
 
-    def draw_valid_moves(self, moves):
+    def visualize_moves(self, moves):
+        """
+        Draws the valid moves and highlights the pieces that can move or capture.
+        """
         self.visualizer.draw_valid_moves(moves)
-        if self.board.jumpable:
-            self.visualizer.highlight_pieces(self.board.jumpable)
-        elif self.board.movable:
-            self.visualizer.highlight_pieces(self.board.movable)
+        active_pieces = self.board.jumpable if self.board.jumpable else self.board.movable
+        self.visualizer.highlight_pieces(active_pieces)
 
     def exchange_turn(self):
-        ''' Toggle the player's turn '''
+        """
+        Toggles the player's turn to the opposite color.
+        """
         self.turn = RED if self.turn == BLACK else BLACK
 
     def winner(self):
-        if self.board.movable or self.board.jumpable:
-            return False
-        return True
+        """
+        Determines if the game has a winner.
+        
+        Returns:
+            True if the current player has no valid moves left, indicating a win for the other player.
+        """
+        return not (self.board.movable or self.board.jumpable)

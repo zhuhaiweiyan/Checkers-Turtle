@@ -28,10 +28,10 @@ class Board:
         self.aten_pieces = []
         self.jumpable = []
         self.movable = []
-        self.visualizer = Visualizer()  # Create a Visualizer instance for drawing
+        self.visualizer = Visualizer()
         self.create_board()
-        self.visualizer.draw_checkerboard(NUM_SQUARES, SQUARE)  # Draw the checkerboard once
-        self.draw_pieces()  # Draw all pieces on the checkerboard
+        self.visualizer.draw_checkerboard(NUM_SQUARES, SQUARE)
+        self.draw_pieces()
 
     def create_board(self):
         """
@@ -49,10 +49,8 @@ class Board:
                         self.board[row].append(EMPTY)
                 else:
                     self.board[row].append(EMPTY)
-        self.movable = [
-            self.board[2][1], self.board[2][3], self.board[2][5],
-            self.board[2][7]
-        ]
+        # initialize self.movable
+        self.judge_movable(BLACK)
 
     def draw_pieces(self):
         """
@@ -73,27 +71,20 @@ class Board:
         """
         Moves a piece to a new position and potentially promotes it to a king.
         """
-        # 重置aten_pieces
         self.aten_pieces = []
-
-        # 检查是否为吃子移动
         captured_moves = self.get_captured_moves(piece)
         if (new_row, new_col) in captured_moves:
-            # 如果是吃子，添加到aten_pieces
             enemy_position = captured_moves[(new_row, new_col)]
             self.aten_pieces.append(self.board[enemy_position[0]][enemy_position[1]])
-        
-        # 执行移动
+ 
         self.board[piece.row][piece.col] = EMPTY
         self.board[new_row][new_col] = piece
         piece.move(new_row, new_col)
         
-        # 如果移动后棋子变为王棋，更新棋子状态
         if (piece.color == BLACK and new_row == NUM_SQUARES - 1) or \
            (piece.color == RED and new_row == 0):
             piece.make_king()
         
-        # 如果有吃子，删除被吃的棋子
         if self.aten_pieces:
             self.delete_piece(self.aten_pieces)
 
@@ -148,9 +139,7 @@ class Board:
         """
 
         uncaptured_moves = {}
-        directions = [(-1, -1), (-1, 1), (1, -1), (1, 1)]  # 方向向量
-
-        for d_row, d_col in directions:
+        for d_row, d_col in DIRECTIONS:
             next_row, next_col = piece.row + d_row, piece.col + d_col
             if 0 <= next_row < NUM_SQUARES and 0 <= next_col < NUM_SQUARES:
                 if (piece.color == BLACK and d_row > 0) or \
@@ -177,8 +166,7 @@ class Board:
                              representing the space to which the piece would move.
         """
         capture_moves = {}
-        directions = [(-1, -1), (-1, 1), (1, -1), (1, 1)]  # 方向向量
-        for d_row, d_col in directions:
+        for d_row, d_col in DIRECTIONS:
             enemy_row, enemy_col = piece.row + d_row, piece.col + d_col
             capture_row, capture_col = enemy_row + d_row, enemy_col + d_col
             if 0 <= enemy_row < NUM_SQUARES and 0 <= enemy_col < NUM_SQUARES and \
@@ -189,7 +177,6 @@ class Board:
                     if isinstance(self.board[enemy_row][enemy_col], Piece) and \
                             self.board[enemy_row][enemy_col].color != piece.color and \
                             self.board[capture_row][capture_col] == EMPTY:
-                        # 只记录可能的吃子移动，不添加到aten_pieces
                         capture_moves[(capture_row, capture_col)] = (enemy_row, enemy_col)
         return capture_moves
 
